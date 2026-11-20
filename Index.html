@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>สื่อการสอน: รู้เท่าทันภัยแฝงบนอินเทอร์เน็ต | วิทยาการคำนวณ ป.6</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Prompt', 'Inter', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 50%, #ecfeff 100%);
+      min-height: 100vh;
+      color: #1e293b;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      box-shadow: 0 10px 30px -10px rgba(30, 58, 138, 0.1);
+    }
+    .stage-pill {
+      transition: all 0.2s ease;
+    }
+    .stage-pill.active {
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+    .option-btn {
+      transition: all 0.16s ease;
+    }
+    .option-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: #6366f1;
+      background-color: #eef2ff;
+    }
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+    }
+    .float-slow {
+      animation: floatSlow 3.5s ease-in-out infinite;
+    }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #ffffff !important; }
+      .glass-card { box-shadow: none !important; border: 1px solid #cbd5e1 !important; }
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-indigo-100 selection:text-indigo-900">
+
+  <!-- Top Navigation Bar -->
+  <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 no-print">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md shrink-0">
+          <i data-lucide="shield-check" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-sm sm:text-base font-bold text-slate-900 leading-tight">
+            สถาบันนักสืบไซเบอร์ ป.6
+          </h1>
+          <p class="text-xs text-slate-500">
+            ภัยแฝงบนอินเทอร์เน็ต • วิทยาการคำนวณ (ว16101)
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Student Badge -->
+        <div id="header-student-badge" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 text-xs font-medium">
+          <i data-lucide="user" class="w-3.5 h-3.5 text-indigo-600"></i>
+          <span id="header-student-name">ผู้เรียนทั่วไป</span>
+        </div>
+
+        <!-- XP Counter -->
+        <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i>
+          <span id="xp-display">0 XP</span>
+        </div>
+
+        <!-- Sound Toggle -->
+        <button id="btn-sound-toggle" type="button" title="เปิด/ปิดเสียงเอฟเฟกต์"
+          class="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition">
+          <i id="sound-icon" data-lucide="volume-2" class="w-4 h-4"></i>
+        </button>
+
+        <!-- User Manual Button -->
+        <button id="btn-open-manual" type="button"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs sm:text-sm font-semibold border border-indigo-200 transition">
+          <i data-lucide="book-open" class="w-4 h-4"></i>
+          <span>คู่มือ & วิธีเล่น</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Stage Stepper -->
+    <div class="max-w-6xl mx-auto px-4 pb-3 overflow-x-auto">
+      <nav id="stage-nav" class="flex items-center gap-2 min-w-max" aria-label="ขั้นตอนการเรียนรู้">
+        <button data-stage="home" class="stage-pill active px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-slate-100 text-slate-700">
+          <i data-lucide="home" class="w-3.5 h-3.5"></i> หน้าแรก
+        </button>
+        <button data-stage="pretest" class="stage-pill px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-slate-100 text-slate-700">
+          <span class="w-4 h-4 rounded-full bg-white/80 text-slate-800 flex items-center justify-center text-[10px] font-bold">1</span>
+          ก่อนเรียน (10)
+        </button>
+        <button data-stage="learn" class="stage-pill px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-slate-100 text-slate-700">
+          <span class="w-4 h-4 rounded-full bg-white/80 text-slate-800 flex items-center justify-center text-[10px] font-bold">2</span>
+          ใบความรู้ & แล็บรหัสผ่าน
+        </button>
+        <button data-stage="worksheet" class="stage-pill px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-slate-100 text-slate-700">
+          <span class="w-4 h-4 rounded-full bg-white/80 text-slate-800 flex items-center justify-center text-[10px] font-bold">3</span>
+          ใบงานที่ 1 (10)
+        </button>
+        <button data-stage="truefalse" class="stage-pill px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-slate-100 text-slate-700">
+          <span class="w-4 h-4 rounded-full bg-white/80 text-slate-800 flex items-center justify-center text-[10px] font-bold">4</span>
+          เกมถูก-ผิด (10)
+        </button>
+        <button data-stage="posttest" class="stage-pill px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-slate-100 text-slate-700">
+          <span class="w-4 h-4 rounded-full bg-white/80 text-slate-800 flex items-center justify-center text-[10px] font-bold">5</span>
+          หลังเรียน (10)
+        </button>
+        <button data-stage="summary" class="stage-pill px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-slate-100 text-slate-700">
+          <i data-lucide="award" class="w-3.5 h-3.5"></i> สรุปผล & เกียรติบัตร
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="max-w-5xl mx-auto px-4 py-6 sm:py-8">
+
+    <!-- ==================== STAGE 0: HOME ==================== -->
+    <section id="stage-home" class="space-y-6">
+      <div class="glass-card rounded-3xl p-6 sm:p-8 overflow-hidden relative">
+        <div class="grid md:grid-cols-12 gap-6 items-center">
+          <div class="md:col-span-7 space-y-4">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+              <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+              แผนการจัดการเรียนรู้ที่ 10 • ชั้นประถมศึกษาปีที่ 6
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 leading-snug">
+              การใช้เทคโนโลยีสารสนเทศอย่างปลอดภัย
+              <span class="block text-indigo-600 mt-1">(รู้เท่าทันภัยแฝงบนอินเทอร์เน็ต)</span>
+            </h2>
+            <p class="text-sm sm:text-base text-slate-600 leading-relaxed">
+              ยินดีต้อนรับสู่ภารกิจฝึกทักษะนักสืบไซเบอร์! เรียนรู้วิธีป้องกันตนเองจากภัยออนไลน์ การสร้างรหัสผ่านที่ปลอดภัย และฝึกวิเคราะห์สถานการณ์จริงครบทั้ง 5 ขั้นตอน
+            </p>
+            <div class="flex flex-wrap gap-3 text-xs text-slate-600 pt-1">
+              <span class="px-2.5 py-1 rounded-lg bg-slate-100 font-medium">มาตรฐาน ว 4.2 ตัวชี้วัด ป.6/4</span>
+              <span class="px-2.5 py-1 rounded-lg bg-slate-100 font-medium">ผู้สอน: นายมานพ เงื้อมผา</span>
+              <span class="px-2.5 py-1 rounded-lg bg-slate-100 font-medium">โรงเรียนวัดประชุมมิตรบำรุง</span>
+            </div>
+          </div>
+
+          <div class="md:col-span-5 flex justify-center">
+            <div class="w-56 h-56 sm:w-64 sm:h-64 rounded-3xl bg-gradient-to-br from-indigo-500 via-blue-600 to-cyan-500 p-6 text-white flex flex-col items-center justify-center text-center shadow-xl float-slow">
+              <i data-lucide="shield-alert" class="w-20 h-20 mb-3 opacity-95"></i>
+              <p class="font-bold text-lg">เกณฑ์ผ่านการเรียนรู้</p>
+              <p class="text-xs text-blue-100 mt-1">ทำคะแนนได้ร้อยละ 75 ขึ้นไป<br>(8 จาก 10 คะแนน)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Student Registration Card -->
+      <div class="glass-card rounded-3xl p-6 sm:p-8">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="id-card" class="w-5 h-5 text-indigo-600"></i>
+              ลงทะเบียนนักเรียนก่อนเริ่มภารกิจ
+            </h3>
+            <p class="text-xs sm:text-sm text-slate-500">กรอกข้อมูลเพื่อใช้แสดงบนใบสรุปผลคะแนนและเกียรติบัตร</p>
+          </div>
+          <button type="button" id="btn-manual-inline" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 underline self-start sm:self-center">
+            อ่านคู่มือและวิธีการเล่นก่อนเริ่ม
+          </button>
+        </div>
+
+        <form id="student-form" class="grid sm:grid-cols-12 gap-4">
+          <div class="sm:col-span-3">
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">คำนำหน้า</label>
+            <select id="input-prefix" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+              <option value="เด็กชาย">เด็กชาย</option>
+              <option value="เด็กหญิง">เด็กหญิง</option>
+            </select>
+          </div>
+          <div class="sm:col-span-6">
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">ชื่อ - นามสกุล</label>
+            <input id="input-fullname" type="text" placeholder="เช่น รักเรียน ใฝ่รู้" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
+          </div>
+          <div class="sm:col-span-3">
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">เลขที่</label>
+            <input id="input-number" type="number" min="1" max="60" placeholder="เช่น 12" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
+          </div>
+          <div class="sm:col-span-12 flex flex-wrap items-center gap-3 pt-2">
+            <button type="submit" class="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-sm shadow-md flex items-center gap-2 transition">
+              <span>เริ่มด่านที่ 1: แบบทดสอบก่อนเรียน</span>
+              <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+            <button type="button" id="btn-quick-explore" class="px-5 py-3 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm border border-slate-300 flex items-center gap-2 transition">
+              <i data-lucide="compass" class="w-4 h-4 text-indigo-600"></i>
+              <span>ข้ามไปศึกษาใบความรู้</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- 5E Mission Overview -->
+      <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div class="glass-card rounded-2xl p-4 border-t-4 border-t-blue-500">
+          <div class="text-xs font-bold text-blue-600 mb-1">ด่านที่ 1 • Engagement</div>
+          <div class="font-bold text-sm text-slate-900">แบบทดสอบก่อนเรียน</div>
+          <p class="text-xs text-slate-500 mt-1">วัดความรู้พื้นฐาน 10 ข้อ ก่อนเข้าสู่บทเรียน</p>
+        </div>
+        <div class="glass-card rounded-2xl p-4 border-t-4 border-t-indigo-500">
+          <div class="text-xs font-bold text-indigo-600 mb-1">ด่านที่ 2 • Exploration</div>
+          <div class="font-bold text-sm text-slate-900">ใบความรู้ & แล็บรหัสผ่าน</div>
+          <p class="text-xs text-slate-500 mt-1">Digital Footprint 3 ภัยแฝง และทดสอบตั้งรหัสผ่าน</p>
+        </div>
+        <div class="glass-card rounded-2xl p-4 border-t-4 border-t-violet-500">
+          <div class="text-xs font-bold text-violet-600 mb-1">ด่านที่ 3 • Explanation</div>
+          <div class="font-bold text-sm text-slate-900">ใบงานที่ 1 นักสืบภัยแฝง</div>
+          <p class="text-xs text-slate-500 mt-1">วิเคราะห์ 5 สถานการณ์ และตรวจรหัสผ่าน 5 ข้อ</p>
+        </div>
+        <div class="glass-card rounded-2xl p-4 border-t-4 border-t-amber-500">
+          <div class="text-xs font-bold text-amber-600 mb-1">ด่านที่ 4 • Expansion</div>
+          <div class="font-bold text-sm text-slate-900">เกมตอบด่วน ถูก-ผิด</div>
+          <p class="text-xs text-slate-500 mt-1">คำถามหลังกิจกรรม 10 ข้อ พร้อมเฉลยทันที</p>
+        </div>
+        <div class="glass-card rounded-2xl p-4 border-t-4 border-t-emerald-500">
+          <div class="text-xs font-bold text-emerald-600 mb-1">ด่านที่ 5 • Evaluation</div>
+          <div class="font-bold text-sm text-slate-900">แบบทดสอบหลังเรียน</div>
+          <p class="text-xs text-slate-500 mt-1">ประเมินผล 10 ข้อ พร้อมเกียรติบัตรสรุปผล</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== STAGE 1: PRE-TEST ==================== -->
+    <section id="stage-pretest" class="hidden space-y-5">
+      <div class="glass-card rounded-3xl p-6 sm:p-8">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">ด่านที่ 1 • ขั้นนำเข้าสู่บทเรียน</span>
+            <h2 class="text-xl font-bold text-slate-900 mt-2">แบบทดสอบก่อนเรียน (10 ข้อ)</h2>
+            <p class="text-xs sm:text-sm text-slate-500">เลือกคำตอบที่ถูกต้องที่สุดเพียงข้อเดียว (ระบบจะบันทึกคะแนนไว้เปรียบเทียบหลังเรียน)</p>
+          </div>
+          <div class="text-right">
+            <div class="text-xs text-slate-500">ความคืบหน้า</div>
+            <div id="pretest-progress-text" class="text-lg font-bold text-indigo-600">ข้อ 1 / 10</div>
+          </div>
+        </div>
+        <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden mb-6">
+          <div id="pretest-progress-bar" class="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-300" style="width: 10%"></div>
+        </div>
+
+        <div id="pretest-container"></div>
+      </div>
+    </section>
+
+    <!-- ==================== STAGE 2: LEARN & PASSWORD LAB ==================== -->
+    <section id="stage-learn" class="hidden space-y-6">
+      <!-- Digital Footprint Banner -->
+      <div class="glass-card rounded-3xl p-6 sm:p-8">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
+          <div>
+            <span class="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold">ด่านที่ 2 • ขั้นสำรวจและค้นหา</span>
+            <h2 class="text-xl font-bold text-slate-900 mt-2">ใบความรู้ที่ 1: รู้เท่าทันภัยแฝงบนอินเทอร์เน็ต</h2>
+          </div>
+          <a href="https://www.youtube.com/watch?v=YKUs3xjGfLw" target="_blank" rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-semibold shadow-sm transition shrink-0">
+            <i data-lucide="play-circle" class="w-4 h-4"></i>
+            <span>ดูวิดีโอ: Digital Footprint คืออะไร?</span>
+          </a>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4 mb-6">
+          <div class="p-4 rounded-2xl bg-sky-50 border border-sky-200">
+            <h3 class="font-bold text-sky-900 text-sm flex items-center gap-2">
+              <i data-lucide="footprints" class="w-4 h-4 text-sky-600"></i>
+              Digital Footprint (ร่องรอยดิจิทัล) คืออะไร?
+            </h3>
+            <p class="text-xs sm:text-sm text-sky-800 mt-1.5 leading-relaxed">
+              ข้อมูลและร่องรอยทุกอย่างที่เราทิ้งไว้เมื่อใช้งานอินเทอร์เน็ต แบ่งออกเป็น <strong>2 แบบ</strong> ได้แก่
+              <strong>Active</strong> (ทิ้งร่องรอยโดยตั้งใจ เช่น โพสต์รูป คอมเมนต์ แชร์) และ <strong>Passive</strong> (ถูกบันทึกโดยไม่รู้ตัว เช่น ประวัติการค้นหา คุกกี้)
+            </p>
+          </div>
+          <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200">
+            <h3 class="font-bold text-amber-900 text-sm flex items-center gap-2">
+              <i data-lucide="lock" class="w-4 h-4 text-amber-600"></i>
+              การกำหนดสิทธิ์การเข้าใช้งานไฟล์ข้อมูล
+            </h3>
+            <ul class="text-xs sm:text-sm text-amber-900 mt-1.5 space-y-1">
+              <li>• <strong>Read:</strong> สิทธิ์ในการอ่านไฟล์ข้อมูลเท่านั้น (ลบไม่ได้)</li>
+              <li>• <strong>Write:</strong> สิทธิ์ในการเขียน/เพิ่มข้อมูล</li>
+              <li>• <strong>Modify:</strong> สิทธิ์ในการปรับปรุง/แก้ไขไฟล์ข้อมูล</li>
+              <li>• <strong>Full Control:</strong> สิทธิ์ในการทำงานทุกอย่างรวมถึงเปลี่ยนชื่อและลบ</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 3 Interactive Threat Cards -->
+        <h3 class="font-bold text-slate-900 text-base mb-3">คลิกศึกษา 3 ประเภทภัยแฝงบนอินเทอร์เน็ต (รับ +10 XP ต่อใบ)</h3>
+        <div class="grid md:grid-cols-3 gap-4" id="threat-cards">
+          <button type="button" data-card="scam" class="threat-card text-left p-5 rounded-2xl border-2 border-rose-200 bg-rose-50/70 hover:bg-rose-50 transition">
+            <div class="flex items-center justify-between mb-2">
+              <span class="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center">
+                <i data-lucide="fish" class="w-5 h-5"></i>
+              </span>
+              <span class="card-status text-xs font-semibold px-2 py-0.5 rounded-full bg-white text-rose-600 border border-rose-200">คลิกอ่าน</span>
+            </div>
+            <h4 class="font-bold text-rose-950 text-base">1. การถูกหลอกลวง</h4>
+            <p class="text-xs text-rose-800 mt-1.5 leading-relaxed">
+              หลอกขอข้อมูลส่วนตัว เช่น รหัสผ่าน (Phishing) หรือหลอกว่าจะให้รางวัลแต่ต้องโอนเงินค่าธรรมเนียม/ทำตามเงื่อนไข ทำให้เสียทรัพย์สิน
+            </p>
+          </button>
+
+          <button type="button" data-card="harass" class="threat-card text-left p-5 rounded-2xl border-2 border-amber-200 bg-amber-50/70 hover:bg-amber-50 transition">
+            <div class="flex items-center justify-between mb-2">
+              <span class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center">
+                <i data-lucide="message-square-warning" class="w-5 h-5"></i>
+              </span>
+              <span class="card-status text-xs font-semibold px-2 py-0.5 rounded-full bg-white text-amber-700 border border-amber-200">คลิกอ่าน</span>
+            </div>
+            <h4 class="font-bold text-amber-950 text-base">2. การถูกคุกคาม</h4>
+            <p class="text-xs text-amber-900 mt-1.5 leading-relaxed">
+              ข้อความ/รูปภาพไม่เหมาะสม เนื้อหาเท็จก่อความวุ่นวายในสังคม สื่อลามก คำหยาบคาย การว่ากล่าวผู้อื่น (การแชร์ต่อถือว่ามีส่วนร่วมเผยแพร่ด้วย)
+            </p>
+          </button>
+
+          <button type="button" data-card="malware" class="threat-card text-left p-5 rounded-2xl border-2 border-violet-200 bg-violet-50/70 hover:bg-violet-50 transition">
+            <div class="flex items-center justify-between mb-2">
+              <span class="w-10 h-10 rounded-xl bg-violet-600 text-white flex items-center justify-center">
+                <i data-lucide="bug" class="w-5 h-5"></i>
+              </span>
+              <span class="card-status text-xs font-semibold px-2 py-0.5 rounded-full bg-white text-violet-700 border border-violet-200">คลิกอ่าน</span>
+            </div>
+            <h4 class="font-bold text-violet-950 text-base">3. ซอฟต์แวร์ไม่พึงประสงค์</h4>
+            <p class="text-xs text-violet-900 mt-1.5 leading-relaxed">
+              ติดตั้งโดยรู้เท่าไม่ถึงการณ์ เช่น ไวรัสคอมพิวเตอร์ เวิร์ม สปายแวร์ ม้าโทรจัน แอดแวร์ ทำให้เครื่องช้า โฆษณากวน หรือดักจับขโมยข้อมูล
+            </p>
+          </button>
+        </div>
+      </div>
+
+      <!-- Interactive Password Strength Lab -->
+      <div class="glass-card rounded-3xl p-6 sm:p-8">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="key-round" class="w-5 h-5 text-emerald-600"></i>
+              ห้องทดลองตั้งรหัสผ่านปลอดภัย (Password Lab)
+            </h3>
+            <p class="text-xs sm:text-sm text-slate-500">ทดลองพิมพ์รหัสผ่านเพื่อดูว่าผ่านเกณฑ์ความปลอดภัยครบทั้ง 5 ข้อหรือไม่ (ควรเปลี่ยนทุก 3–6 เดือน)</p>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-12 gap-6 items-start">
+          <div class="md:col-span-7 space-y-3">
+            <div class="relative">
+              <input id="pw-lab-input" type="text" placeholder="ลองพิมพ์รหัสผ่านที่นี่ เช่น Cs0202#1"
+                class="w-full px-4 py-3 pr-24 rounded-xl border-2 border-slate-300 focus:border-indigo-500 outline-none text-base font-mono" />
+              <button id="pw-lab-sample" type="button" class="absolute right-2 top-2 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold">
+                สุ่มตัวอย่างดี
+              </button>
+            </div>
+            <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+              <div id="pw-lab-bar" class="h-full bg-slate-300 transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <div class="flex items-center justify-between text-xs font-semibold">
+              <span id="pw-lab-label" class="text-slate-500">ยังไม่ได้กรอกรหัสผ่าน</span>
+              <span id="pw-lab-score" class="text-slate-600">0 / 5 เกณฑ์</span>
+            </div>
+          </div>
+
+          <div class="md:col-span-5 bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-2 text-xs sm:text-sm">
+            <div id="chk-len" class="flex items-center gap-2 text-slate-500"><i data-lucide="circle" class="w-4 h-4"></i> ยาวไม่น้อยกว่า 8 ตัวอักษร</div>
+            <div id="chk-upper" class="flex items-center gap-2 text-slate-500"><i data-lucide="circle" class="w-4 h-4"></i> ตัวอักษรพิมพ์ใหญ่ (A–Z)</div>
+            <div id="chk-lower" class="flex items-center gap-2 text-slate-500"><i data-lucide="circle" class="w-4 h-4"></i> ตัวอักษรพิมพ์เล็ก (a–z)</div>
+            <div id="chk-num" class="flex items-center gap-2 text-slate-500"><i data-lucide="circle" class="w-4 h-4"></i> ตัวเลข (0–9)</div>
+            <div id="chk-sym" class="flex items-center gap-2 text-slate-500"><i data-lucide="circle" class="w-4 h-4"></i> สัญลักษณ์พิเศษ (! @ # $ _ ฯลฯ)</div>
+          </div>
+        </div>
+
+        <div class="mt-6 flex justify-end">
+          <button type="button" data-go-stage="worksheet" class="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-semibold text-sm shadow-md flex items-center gap-2 transition">
+            <span>ไปด่านที่ 3: ทำใบงานที่ 1</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== STAGE 3: WORKSHEET 1 ==================== -->
+    <section id="stage-worksheet" class="hidden space-y-6">
+      <div class="glass-card rounded-3xl p-6 sm:p-8">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <span class="px-2.5 py-1 rounded-full bg-violet-100 text-violet-700 text-xs font-bold">ด่านที่ 3 • ใบงานที่ 1 (10 คะแนน)</span>
+            <h2 class="text-xl font-bold text-slate-900 mt-2">รู้เท่าทันภัยแฝงบนอินเทอร์เน็ต</h2>
+            <p class="text-xs sm:text-sm text-slate-500">วิเคราะห์สถานการณ์ 5 ข้อ และตรวจสอบความเหมาะสมของรหัสผ่าน 5 ข้อ</p>
+          </div>
+          <div class="px-4 py-2 rounded-2xl bg-violet-50 border border-violet-200 text-center">
+            <div class="text-[11px] text-violet-600 font-semibold">คะแนนใบงาน</div>
+            <div id="ws-score-badge" class="text-lg font-bold text-violet-800">0 / 10</div>
+          </div>
+        </div>
+
+        <!-- Part 1 -->
+        <div class="mb-8">
+          <h3 class="font-bold text-slate-900 text-base mb-3 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-violet-600 text-white text-xs flex items-center justify-center">1</span>
+            พิจารณาว่าสถานการณ์ต่อไปนี้เป็นภัยแฝงลักษณะใด (5 ข้อ)
+          </h3>
+          <div id="ws-part1" class="space-y-4"></div>
+        </div>
+
+        <!-- Part 2 -->
+        <div>
+          <h3 class="font-bold text-slate-900 text-base mb-3 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-violet-600 text-white text-xs flex items-center justify-center">2</span>
+            พิจารณาว่าการตั้งรหัสผ่านต่อไปนี้เหมาะสมหรือไม่ (5 ข้อ)
+          </h3>
+          <div id="ws-part2" class="space-y-3"></div>
+        </div>
+
+        <div class="mt-6 flex flex-wrap justify-between items-center gap-3 pt-4 border-t border-slate-200">
+          <button type="button" id="btn-ws-check-all" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-sm flex items-center gap-2 transition">
+            <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+            <span>ตรวจคำตอบใบงานทั้งหมด</span>
+          </button>
+          <button type="button" data-go-stage="truefalse" class="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold text-sm shadow-md flex items-center gap-2 transition">
+            <span>ไปด่านที่ 4: เกมตอบด่วน ถูก-ผิด</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== STAGE 4: TRUE / FALSE GAME ==================== -->
+    <section id="stage-truefalse" class="hidden space-y-5">
+      <div class="glass-card rounded-3xl p-6 sm:p-8">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">ด่านที่ 4 • คำถามหลังกิจกรรม</span>
+            <h2 class="text-xl font-bold text-slate-900 mt-2">เกมตอบด่วน: ถูก (✓) หรือ ผิด (✗) (10 ข้อ)</h2>
+            <p class="text-xs sm:text-sm text-slate-500">อ่านข้อความแล้วตัดสินใจให้ไว! ตอบถูกต่อเนื่องเพื่อสร้างคอมโบ</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-xs font-bold text-amber-800">
+              คอมโบ: <span id="tf-combo">0</span> 🔥
+            </div>
+            <div class="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800">
+              คะแนน: <span id="tf-score">0</span> / 10
+            </div>
+          </div>
+        </div>
+        <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden mb-6">
+          <div id="tf-progress-bar" class="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-300" style="width: 10%"></div>
+        </div>
+
+        <div id="tf-container"></div>
+      </div>
+    </section>
+
+    <!-- ==================== STAGE 5: POST-TEST ==================== -->
+    <section id="stage-posttest" class="hidden space-y-5">
+      <div class="glass-card rounded-3xl p-6 sm:p-8">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">ด่านที่ 5 • ขั้นประเมินผล</span>
+            <h2 class="text-xl font-bold text-slate-900 mt-2">แบบทดสอบหลังเรียน (10 ข้อ)</h2>
+            <p class="text-xs sm:text-sm text-slate-500">เลือกคำตอบที่ถูกต้องที่สุดเพียงข้อเดียว เพื่อวัดพัฒนาการหลังเรียน</p>
+          </div>
+          <div class="text-right">
+            <div class="text-xs text-slate-500">ความคืบหน้า</div>
+            <div id="posttest-progress-text" class="text-lg font-bold text-emerald-600">ข้อ 1 / 10</div>
+          </div>
+        </div>
+        <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden mb-6">
+          <div id="posttest-progress-bar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-600 transition-all duration-300" style="width: 10%"></div>
+        </div>
+
+        <div id="posttest-container"></div>
+      </div>
+    </section>
+
+    <!-- ==================== STAGE 6: SUMMARY & CERTIFICATE ==================== -->
+    <section id="stage-summary" class="hidden space-y-6">
+      <div class="glass-card rounded-3xl p-6 sm:p-8 border-2 border-indigo-200">
+        <div class="text-center max-w-2xl mx-auto mb-6">
+          <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center mx-auto mb-3 shadow-lg">
+            <i data-lucide="trophy" class="w-9 h-9"></i>
+          </div>
+          <h2 class="text-2xl font-bold text-slate-900">รายงานผลการเรียนรู้ & เกียรติบัตร</h2>
+          <p class="text-sm text-slate-600 mt-1">
+            ผู้เรียน: <strong id="sum-student-name" class="text-indigo-700">ผู้เรียนทั่วไป</strong> • เลขที่ <strong id="sum-student-no">-</strong> • ชั้น ป.6
+          </p>
+        </div>
+
+        <!-- 4 Score Cards -->
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div class="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-center">
+            <div class="text-xs font-semibold text-blue-700">แบบทดสอบก่อนเรียน</div>
+            <div id="sum-pre" class="text-2xl font-bold text-blue-900 mt-1">- / 10</div>
+            <div id="sum-pre-pct" class="text-xs text-blue-600 mt-0.5">ร้อยละ -</div>
+          </div>
+          <div class="p-4 rounded-2xl bg-violet-50 border border-violet-200 text-center">
+            <div class="text-xs font-semibold text-violet-700">ใบงานที่ 1 (Skill)</div>
+            <div id="sum-ws" class="text-2xl font-bold text-violet-900 mt-1">- / 10</div>
+            <div id="sum-ws-quality" class="text-xs text-violet-600 mt-0.5">ระดับ -</div>
+          </div>
+          <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-center">
+            <div class="text-xs font-semibold text-amber-700">คำถามหลังกิจกรรม</div>
+            <div id="sum-tf" class="text-2xl font-bold text-amber-900 mt-1">- / 10</div>
+            <div id="sum-tf-quality" class="text-xs text-amber-600 mt-0.5">ระดับ -</div>
+          </div>
+          <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center">
+            <div class="text-xs font-semibold text-emerald-700">แบบทดสอบหลังเรียน</div>
+            <div id="sum-post" class="text-2xl font-bold text-emerald-900 mt-1">- / 10</div>
+            <div id="sum-post-quality" class="text-xs text-emerald-600 mt-0.5">ระดับ -</div>
+          </div>
+        </div>
+
+        <!-- Growth & Pass Status -->
+        <div id="sum-status-box" class="p-5 rounded-2xl bg-slate-50 border border-slate-200 mb-6 text-center">
+          <div id="sum-pass-badge" class="inline-block px-4 py-1.5 rounded-full text-sm font-bold mb-2">รอผลคะแนนหลังเรียน</div>
+          <p id="sum-growth-text" class="text-sm text-slate-700"></p>
+        </div>
+
+        <!-- Quality Criteria Table -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 mb-6">
+          <h3 class="text-sm font-bold text-slate-800 mb-2">เกณฑ์การตัดสินคุณภาพ (ตามแผนการจัดการเรียนรู้ที่ 10)</h3>
+          <div class="grid grid-cols-3 gap-2 text-xs text-center">
+            <div class="p-2 rounded-xl bg-emerald-50 text-emerald-800 font-semibold">8–10 คะแนน (80–100%)<br>ระดับคุณภาพ: ดี</div>
+            <div class="p-2 rounded-xl bg-amber-50 text-amber-800 font-semibold">5–7 คะแนน (50–79%)<br>ระดับคุณภาพ: พอใช้</div>
+            <div class="p-2 rounded-xl bg-rose-50 text-rose-800 font-semibold">0–4 คะแนน (0–49%)<br>ระดับคุณภาพ: ปรับปรุง</div>
+          </div>
+          <p class="text-[11px] text-slate-500 mt-2 text-center">* เกณฑ์ผ่านการประเมิน: ร้อยละ 75 ขึ้นไป (8 คะแนนขึ้นไป)</p>
+        </div>
+
+        <div class="flex flex-wrap justify-center gap-3 no-print">
+          <button type="button" id="btn-print-report" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm flex items-center gap-2 transition">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span>พิมพ์ / บันทึกผลคะแนน (PDF)</span>
+          </button>
+          <button type="button" id="btn-reset-all" class="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm border border-slate-300 flex items-center gap-2 transition">
+            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+            <span>เริ่มทำใหม่ทั้งหมด</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== USER MANUAL MODAL ==================== -->
+  <div id="manual-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[88vh] overflow-y-auto shadow-2xl border border-slate-200 p-6 sm:p-8">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-4 mb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
+            <i data-lucide="book-open" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-slate-900">คู่มือการใช้งานและวิธีการเล่น</h3>
+            <p class="text-xs text-slate-500">สื่อการสอนเรื่อง ภัยแฝงบนอินเทอร์เน็ต (ป.6)</p>
+          </div>
+        </div>
+        <button id="btn-close-manual" type="button" class="p-2 rounded-xl hover:bg-slate-100 text-slate-500">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-sm text-slate-700 leading-relaxed">
+        <div class="p-4 rounded-2xl bg-indigo-50 border border-indigo-100">
+          <h4 class="font-bold text-indigo-900 mb-1">1. ขั้นตอนการเรียนรู้ออนไลน์ 5 ด่าน (5E)</h4>
+          <ul class="space-y-1 text-xs sm:text-sm text-indigo-950">
+            <li>• <strong>หน้าแรก:</strong> กรอกคำนำหน้า ชื่อ-นามสกุล และเลขที่ เพื่อบันทึกบนเกียรติบัตร</li>
+            <li>• <strong>ด่านที่ 1 (ก่อนเรียน):</strong> ทำแบบทดสอบ 10 ข้อ เพื่อวัดพื้นฐานเดิม</li>
+            <li>• <strong>ด่านที่ 2 (ใบความรู้ & แล็บรหัสผ่าน):</strong> อ่านการ์ดความรู้ 3 ภัยแฝง ดูวิดีโอ Digital Footprint และลองตั้งรหัสผ่านในห้องแล็บ</li>
+            <li>• <strong>ด่านที่ 3 (ใบงานที่ 1):</strong> วิเคราะห์สถานการณ์ 5 ข้อ + ตรวจรหัสผ่าน 5 ข้อ กดตรวจคำตอบเพื่อดูเฉลยและเหตุผล</li>
+            <li>• <strong>ด่านที่ 4 (เกมถูก-ผิด):</strong> ตอบคำถาม 10 ข้อแบบรวดเร็ว เก็บคอมโบคะแนน</li>
+            <li>• <strong>ด่านที่ 5 (หลังเรียน & สรุปผล):</strong> ทำแบบทดสอบหลังเรียน 10 ข้อ แล้วดูกราฟเปรียบเทียบคะแนนและพิมพ์ส่งครู</li>
+          </ul>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-100">
+          <h4 class="font-bold text-emerald-900 mb-1">2. ระบบคะแนน XP และเกณฑ์ผ่าน</h4>
+          <p class="text-xs sm:text-sm text-emerald-950">
+            นักเรียนจะได้รับค่าประสบการณ์ (XP) เมื่ออ่านใบความรู้ ทดลองตั้งรหัสผ่าน และตอบคำถามถูกต้อง โดยมีเกณฑ์ผ่านการประเมินที่ <strong>ร้อยละ 75 ขึ้นไป (8–10 คะแนน = ระดับดี)</strong>
+          </p>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-amber-50 border border-amber-100">
+          <h4 class="font-bold text-amber-900 mb-1">3. คำแนะนำสำหรับครูผู้สอน</h4>
+          <p class="text-xs sm:text-sm text-amber-950">
+            ไฟล์นี้เป็นเว็บแอปพลิเคชันแบบไฟล์เดียว (Standalone HTML) สามารถเปิดใช้งานได้ทันทีบนคอมพิวเตอร์ แท็บเล็ต หรือสมาร์ตโฟน นักเรียนสามารถกดปุ่ม <strong>"พิมพ์ / บันทึกผลคะแนน (PDF)"</strong> ในหน้าสรุปผลเพื่อส่งงานในชั้นเรียนได้ทันที
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end">
+        <button id="btn-close-manual-2" type="button" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm">
+          เข้าใจแล้ว เริ่มใช้งานเลย!
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="hidden fixed bottom-5 right-5 z-50 px-4 py-3 rounded-2xl bg-slate-900 text-white text-xs sm:text-sm font-medium shadow-xl flex items-center gap-2 no-print">
+    <i data-lucide="info" class="w-4 h-4 text-sky-400"></i>
+    <span id="toast-msg"></span>
+  </div>
+
+  <script>
+    // ==================== DATA FROM LESSON PLAN 10 ====================
+    const PRETEST_DATA = [
+      {
+        q: '1. ปลาสแกนหนังสือการ์ตูนที่ซื้อมา แล้วส่งให้เพื่อนทางสื่อสังคมออนไลน์ แสดงว่าปลาเข้าข่ายก่ออันตรายจากการใช้งานอินเทอร์เน็ตข้อใด',
+        options: ['ก. การล่อลวงเยาวชน', 'ข. การเผยแพร่ข้อมูลที่ไม่เหมาะสม', 'ค. การหลอกลวงแบบฟิชชิ่ง (Phishing)', 'ง. การก่ออาชญากรรมทางอินเทอร์เน็ต'],
+        answer: 3,
+        explain: 'การสแกนหนังสือการ์ตูนที่มีลิขสิทธิ์ไปแจกจ่ายทางออนไลน์เข้าข่ายละเมิดลิขสิทธิ์และเป็นการก่ออาชญากรรมทางอินเทอร์เน็ต'
+      },
+      {
+        q: '2. ข้อใดนิยามรูปแบบการกำหนดสิทธิ์ในการใช้งานถูกต้อง',
+        options: [
+          'ก. Write คือ การให้สิทธิ์ในการแก้ไขไฟล์ข้อมูลและลบไฟล์',
+          'ข. Read คือ การให้สิทธิ์ในการอ่านไฟล์ข้อมูลและลบไฟล์',
+          'ค. Modify คือ การให้สิทธิ์ในการปรับปรุงไฟล์ข้อมูล',
+          'ง. Full Control การให้สิทธิ์ในการทำงานทุกอย่าง ยกเว้นเปลี่ยนชื่อไฟล์'
+        ],
+        answer: 2,
+        explain: 'Modify คือการให้สิทธิ์ในการปรับปรุง/แก้ไขไฟล์ข้อมูล ส่วน Read อ่านได้อย่างเดียวและลบไม่ได้'
+      },
+      {
+        q: '3. ข้อใดเป็นการตั้งรหัสผ่านที่มีความปลอดภัยต่ำ',
+        options: ['ก. NA2540', 'ข. 7UfPe_3891', 'ค. Tww00@74060', 'ง. M1Ab!8750'],
+        answer: 0,
+        explain: 'NA2540 มีความยาวเพียง 6 ตัวอักษร (น้อยกว่า 8 ตัว) ไม่มีพิมพ์เล็ก และไม่มีสัญลักษณ์พิเศษ จึงเดาได้ง่าย'
+      },
+      {
+        q: '4. ข้อใดไม่ใช่ข้อควรปฏิบัติในการใช้งานรหัสผ่าน',
+        options: [
+          'ก. เปลี่ยนรหัสผ่านทุก ๆ 2-3 เดือน',
+          'ข. ไม่เปิดเผยรหัสผ่านให้ผู้อื่นรับทราบ',
+          'ค. อีเมลจากสื่อสังคมออนไลน์แจ้งปาล์มมาว่ามีคนพยายามเข้าใช้บัญชี และให้ปาล์มกรอกรหัสผ่านเพื่อเปลี่ยนรหัสผ่านใหม่',
+          'ง. บันทึกรหัสผ่านแบบอัตโนมัติลงบนเบราว์เซอร์'
+        ],
+        answer: 3,
+        explain: 'การบันทึกรหัสผ่านแบบอัตโนมัติบนเบราว์เซอร์ (โดยเฉพาะเครื่องสาธารณะ) เสี่ยงต่อการถูกผู้อื่นเข้าถึงบัญชี'
+      },
+      {
+        q: '5. ข้อใดไม่เข้าข่ายการหลอกลวงแบบฟิชชิ่ง (Phishing)',
+        options: [
+          'ก. แอ๋มได้รับอีเมลจากคนที่ไม่รู้จัก โดยแจ้งให้คลิกลิงก์เพื่อรับเงินรางวัล',
+          'ข. ป๊อบพบว่ามีข้อความโฆษณาขึ้นที่หน้าจอบ่อย ๆ หลังเข้าใช้อินเทอร์เน็ตในคอมพิวเตอร์',
+          'ค. อีเมลจากสื่อสังคมออนไลน์แจ้งปาล์มมาว่ามีคนพยายามเข้าใช้บัญชี และให้ปาล์มกรอกรหัสผ่านเพื่อเปลี่ยนรหัสผ่านใหม่',
+          'ง. โอได้รับอีเมลแจ้งให้เข้าไปล็อกอิน เพื่อรับคูปองเงินสดจากเว็บไซต์ที่เข้าใช้งานเป็นประจำ แต่พบว่าชื่อเว็บไซต์แตกต่างจากที่เคยเข้าใช้งาน'
+        ],
+        answer: 1,
+        explain: 'ข้อความโฆษณาเด้งบ่อย ๆ เป็นอาการของโปรแกรมแอดแวร์/มัลแวร์ ไม่ใช่การหลอกลวงแบบฟิชชิ่ง'
+      },
+      {
+        q: '6. ข้อใดไม่ใช่แนวทางในการป้องกันอันตรายจากการใช้งานอินเทอร์เน็ต',
+        options: [
+          'ก. ไม่เปิดเผยข้อมูลส่วนตัว',
+          'ข. ตั้งรหัสผ่านในการเข้าสู่ระบบ',
+          'ค. ไม่บอกรหัสผ่านในการเข้าสู่ระบบกับผู้อื่น',
+          'ง. ปรึกษาปัญหาส่วนตัวกับผู้เชี่ยวชาญที่พบผ่านสื่อสังคมออนไลน์'
+        ],
+        answer: 3,
+        explain: 'ไม่ควรเปิดเผยปัญหาส่วนตัวหรือข้อมูลส่วนตัวกับคนแปลกหน้าที่รู้จักผ่านสื่อสังคมออนไลน์'
+      },
+      {
+        q: '7. ข้อใดเป็นอาการของคอมพิวเตอร์ที่ไม่ได้เกิดจากปัญหามัลแวร์',
+        options: [
+          'ก. หน้าจอกระพริบ และสั่น',
+          'ข. เปิดเครื่องคอมพิวเตอร์ไม่ได้',
+          'ค. คอมพิวเตอร์ทำงานช้า และมีข้อความ/โฆษณาแปลก ๆ',
+          'ง. ข้อ ก และ ข ถูกต้อง'
+        ],
+        answer: 3,
+        explain: 'หน้าจอกระพริบ/สั่น และเปิดเครื่องไม่ติด มักเกิดจากปัญหาฮาร์ดแวร์หรือระบบไฟฟ้า ไม่ใช่มัลแวร์'
+      },
+      {
+        q: '8. ข้อใดไม่เข้าข่ายการกระทำผิดตาม พ.ร.บ.คอมพิวเตอร์',
+        options: [
+          'ก. เผยแพร่เนื้อหาที่ไม่เหมาะสม',
+          'ข. เผยแพร่ภาพตัดต่อของตัวเอง',
+          'ค. เผยแพร่วิธีการเข้าถึงระบบคอมพิวเตอร์ของผู้อื่น',
+          'ง. เข้าถึงข้อมูลของผู้อื่นโดยไม่ได้รับอนุญาต'
+        ],
+        answer: 1,
+        explain: 'การตัดต่อภาพของตนเองที่ไม่ทำให้ผู้อื่นเสียหาย ไม่ถือเป็นความผิดตาม พ.ร.บ.คอมพิวเตอร์'
+      },
+      {
+        q: '9. ข้อใดเป็นแนวทางในการป้องกันมัลแวร์',
+        options: [
+          'ก. เรียกใช้งานโปรแกรมตรวจจับมัลแวร์ในคอมพิวเตอร์',
+          'ข. สังเกตความเร็วในการทำงานของคอมพิวเตอร์',
+          'ค. ลบไฟล์งานที่ไม่ใช้งานอย่างสม่ำเสมอ',
+          'ง. ข้อ ก และ ข ถูกต้อง'
+        ],
+        answer: 3,
+        explain: 'ควรใช้โปรแกรมสแกนไวรัส/ตรวจจับมัลแวร์ และหมั่นสังเกตความผิดปกติของเครื่องคอมพิวเตอร์'
+      },
+      {
+        q: '10. ข้อใดคือนิยามที่ถูกต้องของมัลแวร์',
+        options: [
+          'ก. สปายแวร์ เป็นโปรแกรมที่แอบขโมยข้อมูลระหว่างใช้งานคอมพิวเตอร์เพื่อนำไปใช้แสวงหาผลประโยชน์ต่าง ๆ',
+          'ข. เวิร์ม เป็นโปรแกรมที่แฝงมากับโปรแกรมทั่วไปทำหน้าที่แสดงโฆษณาอย่างต่อเนื่อง',
+          'ค. ม้าโทรจัน เป็นโปรแกรมที่ขัดขวางการเข้าถึงข้อมูลจนกว่าผู้ใช้จะจ่ายเงินให้ผู้เรียกค่าไถ่',
+          'ง. ถูกทุกข้อ'
+        ],
+        answer: 0,
+        explain: 'สปายแวร์ (Spyware) มีหน้าที่แอบสอดแนมและขโมยข้อมูล ส่วนข้อ ข คือแอดแวร์ และข้อ ค คือแรนซัมแวร์'
+      }
+    ];
+
+    const POSTTEST_DATA = [
+      {
+        q: '1. ข้อใด ไม่ใช่ อันตรายที่อาจเกิดจากการใช้งานอินเทอร์เน็ตโดยตรง',
+        options: [
+          'ก. มีคนนำภาพตัดต่อเจนไปโพสต์ล้อเลียนในสื่อสังคมออนไลน์',
+          'ข. ฝนเล่นแอปพลิเคชันสื่อสังคมออนไลน์ขณะเดินข้ามถนน',
+          'ค. ปลาสแกนหนังสือการ์ตูนที่ซื้อมาส่งให้เพื่อน ๆ ทางอีเมล',
+          'ง. เพื่อนที่รู้จักครั้งแรกผ่านสื่อสังคมออนไลน์ ชวนแบมไปเที่ยวและขโมยเงิน'
+        ],
+        answer: 1,
+        explain: 'การเล่นมือถือขณะเดินข้ามถนนเป็นอันตรายทางกายภาพจากความประมาทของตนเอง ไม่ใช่อันตรายจากระบบหรือผู้ไม่หวังดีบนอินเทอร์เน็ตโดยตรง'
+      },
+      {
+        q: '2. ข้อใดคือความหมายของการหลอกลวงแบบฟิชชิ่ง (Phishing)',
+        options: [
+          'ก. การชักชวนให้ซื้อสินค้าปลอมผ่านสื่อออนไลน์',
+          'ข. การใช้บัญชีสื่อออนไลน์ของผู้อื่นเพื่อหลอกให้โอนเงิน',
+          'ค. การโพสต์ข้อความหลอกลวง ใส่ร้าย ผู้อื่นทางสื่อออนไลน์',
+          'ง. การใช้จิตวิทยาเพื่อขอข้อมูลสำคัญส่วนตัวผ่านสื่อออนไลน์'
+        ],
+        answer: 3,
+        explain: 'Phishing คือการใช้กลลวงหรือจิตวิทยาหลอกให้เหยื่อกรอกข้อมูลสำคัญ เช่น รหัสผ่าน หรือเลขบัตร'
+      },
+      {
+        q: '3. ข้อใด ไม่ถือว่าเป็นการกระทำผิด ตาม พ.ร.บ. คอมพิวเตอร์',
+        options: [
+          'ก. อ้อมส่งอีเมลเพื่อขอยืมเงินจากฝน',
+          'ข. หมูเข้าไปลบไฟล์การบ้านในคอมพิวเตอร์ของผึ้ง',
+          'ค. ไผ่นำรหัสผ่านอีเมลของเต่าไปโพสต์ในสื่อสังคมออนไลน์',
+          'ง. ต้นตัดต่อภาพแอนกับภาพชุดว่ายน้ำ โพสต์ในสื่อสังคมออนไลน์'
+        ],
+        answer: 0,
+        explain: 'การส่งอีเมลขอยืมเงินกันตามปกติ (โดยไม่ได้แอบอ้างหรือหลอกลวง) ไม่ใช่ความผิดตาม พ.ร.บ.คอมพิวเตอร์'
+      },
+      {
+        q: '4. ข้อใดไม่ใช่แนวทางการป้องกันมัลแวร์',
+        options: [
+          'ก. ลูกกวาดสำรองไฟล์ข้อมูลคอมพิวเตอร์ไว้ในแฟลชไดรฟ์ทุกอาทิตย์',
+          'ข. ปันปัน สแกนไวรัสในคอมพิวเตอร์ทุกครั้งที่ต้องใช้แฟลชไดรฟ์ของเพื่อน',
+          'ค. ต้นน้ำ ได้อีเมลจากคนที่ไม่รู้จักแจ้งว่าถูกลอตเตอรี แต่ไม่ยอมเปิดไฟล์แนบและลบเมล',
+          'ง. เพลิน จัดไฟล์งานในคอมพิวเตอร์ให้หมวดหมู่ และลบไฟล์ภาพ เอกสารที่ไม่ได้ใช้งานสม่ำเสมอ'
+        ],
+        answer: 3,
+        explain: 'การจัดหมวดหมู่ไฟล์และลบเอกสารเก่าเป็นการจัดการพื้นที่เก็บข้อมูล ไม่ได้ช่วยป้องกันมัลแวร์โดยตรง'
+      },
+      {
+        q: '5. ข้อใดคือปัญหาที่เกิดจากมัลแวร์',
+        options: [
+          'ก. มีโฆษณาหรือข้อความแปลก ๆ ขึ้นมา',
+          'ข. คอมพิวเตอร์ทำงานช้าลง หรือค้างบ่อย ๆ',
+          'ค. คอมพิวเตอร์ไม่สามารถเชื่อมต่ออินเทอร์เน็ต หรือเชื่อมต่อได้ช้า',
+          'ง. ถูกทุกข้อ'
+        ],
+        answer: 3,
+        explain: 'มัลแวร์ทำให้เกิดโฆษณากวนใจ เครื่องช้า ค้าง และอาจรบกวนการเชื่อมต่ออินเทอร์เน็ตได้ทั้งหมด'
+      },
+      {
+        q: '6. ข้อควรปฏิบัติในการเข้าใช้งานโดยใช้รหัสผ่านในคอมพิวเตอร์',
+        options: [
+          'ก. เปลี่ยนรหัสผ่านบ่อย ๆ ทุก 2-3 เดือน',
+          'ข. บอกรหัสผ่านเฉพาะเพื่อนสนิทเท่านั้น',
+          'ค. บันทึกรหัสผ่านแบบอัตโนมัติเพื่อป้องกันการพิมพ์รหัสผ่านผิดพลาด',
+          'ง. จดรหัสผ่านใส่กระดาษหรือในอุปกรณ์เทคโนโลยี เพื่อป้องกันการลืมรหัสผ่าน'
+        ],
+        answer: 0,
+        explain: 'ควรเปลี่ยนรหัสผ่านสม่ำเสมอ และไม่บอกรหัสผ่านให้ใครรู้แม้แต่เพื่อนสนิท'
+      },
+      {
+        q: '7. การตั้งรหัสผ่านแบบใดมีความปลอดภัยสูง',
+        options: [
+          'ก. ใช้วันเดือนปีเกิด เช่น 10122550',
+          'ข. ใช้ตัวเลขซ้ำ ๆ เพื่อให้จำง่าย เช่น 181818',
+          'ค. เรียงตัวเลขจากมากไปหาน้อย เช่น 654321',
+          'ง. ใช้อักษรพิมพ์ใหญ่ พิมพ์เล็ก ตัวเลข สัญลักษณ์ เช่น Mtf6wU_1969'
+        ],
+        answer: 3,
+        explain: 'Mtf6wU_1969 มีความยาวเกิน 8 ตัว และมีครบทั้งพิมพ์ใหญ่ พิมพ์เล็ก ตัวเลข และสัญลักษณ์พิเศษ'
+      },
+      {
+        q: '8. ข้อใดไม่ใช่แนวทางในการป้องกันอันตรายจากการใช้งานอินเทอร์เน็ต',
+        options: [
+          'ก. ไม่เปิดเผยข้อมูลส่วนตัว',
+          'ข. ตั้งรหัสผ่านในการเข้าสู่ระบบ',
+          'ค. ไม่บอกรหัสผ่านในการเข้าสู่ระบบกับผู้อื่น',
+          'ง. ปรึกษาปัญหาส่วนตัวกับผู้เชี่ยวชาญที่พบผ่านสื่อสังคมออนไลน์'
+        ],
+        answer: 3,
+        explain: 'ไม่ควรเล่าปัญหาส่วนตัวให้คนแปลกหน้าบนโซเชียลมีเดีย เพราะอาจถูกหลอกลวงหรือแบล็กเมล์ได้'
+      },
+      {
+        q: '9. ข้อต่อไปนี้ไม่ใช่ลักษณะของมัลแวร์',
+        options: [
+          'ก. ม้าโทรจันเป็นโปรแกรมที่หลอกลวงให้ผู้ใช้ติดตั้งและเรียกใช้งาน',
+          'ข. ไวรัสคอมพิวเตอร์ เป็นโปรแกรมที่เขียนขึ้นเพื่อขัดขวางการทำงานของคอมพิวเตอร์',
+          'ค. สปายแวร์ เป็นโปรแกรมที่หาจุดอ่อนของระบบปลอดภัยแล้วแพร่กระจายสู่คอมพิวเตอร์อื่น ๆ',
+          'ง. โปรแกรมแอ็ดแวร์ เป็นโปรแกรมที่แฝงมากับโปรแกรมทั่วไป ทำหน้าที่แสดงโฆษณาอย่างต่อเนื่อง'
+        ],
+        answer: 2,
+        explain: 'โปรแกรมที่หาจุดอ่อนเพื่อแพร่กระจายตัวเองสู่เครื่องอื่นคือ เวิร์ม (Worm) ไม่ใช่สปายแวร์'
+      },
+      {
+        q: '10. รูปแบบการกำหนดสิทธิ์ในการเข้าใช้งาน ข้อใดไม่ถูกต้อง',
+        options: [
+          'ก. Write คือ ให้สิทธิ์ในการแก้ไขไฟล์ข้อมูล',
+          'ข. Modify คือ สิทธิ์ในการปรับปรุงไฟล์ข้อมูล',
+          'ค. Full Control คือ ให้สิทธิ์ในการทำงานทุกอย่าง',
+          'ง. Read คือ ให้สิทธิ์ในการอ่านและลบไฟล์ข้อมูล'
+        ],
+        answer: 3,
+        explain: 'Read ให้สิทธิ์ในการอ่านไฟล์ข้อมูลเท่านั้น ไม่สามารถลบหรือแก้ไขไฟล์ได้'
+      }
+    ];
+
+    const WS_PART1 = [
+      {
+        id: 'ws1',
+        story: 'คุณป้าของสีน้ำได้รับแจ้งว่า ได้รับรางวัลจากการส่งคูปองชิงโชค แต่ต้องโอนเงินค่าธรรมเนียมในการจัดเตรียมของรางวัลให้ก่อนเป็นจำนวน 10,000 บาท คุณป้าจึงโอนเงินตามข้อตกลง แต่ไม่ได้รับรางวัลแต่อย่างใด',
+        options: ['การถูกหลอกลวง', 'การถูกคุกคาม', 'การติดตั้งซอฟต์แวร์ไม่พึงประสงค์โดยรู้เท่าไม่ถึงการณ์'],
+        answer: 0,
+        reason: 'เป็นการหลอกลวงว่าจะให้รางวัลแต่ต้องโอนเงินค่าธรรมเนียมก่อน ทำให้ผู้เสียหายสูญเสียทรัพย์สิน'
+      },
+      {
+        id: 'ws2',
+        story: 'น้องกิ๊กเข้าใช้งานอินเทอร์เน็ตเพื่อสืบค้นข้อมูลมาทำรายงาน และได้คลิกปุ่มดาวน์โหลดในหน้าเว็บเพื่อต้องการดาวน์โหลดเนื้อหาที่ต้องการ หลังจากนั้นมีโฆษณาขึ้นมาก่อกวนการใช้งานอยู่ตลอดเวลา',
+        options: ['การถูกหลอกลวง', 'การถูกคุกคาม', 'การติดตั้งซอฟต์แวร์ไม่พึงประสงค์โดยรู้เท่าไม่ถึงการณ์'],
+        answer: 2,
+        reason: 'เกิดจากการคลิกดาวน์โหลดจากเว็บไซต์ที่ไม่น่าเชื่อถือ ทำให้มีโปรแกรมแอดแวร์/ซอฟต์แวร์ไม่พึงประสงค์ถูกติดตั้งลงเครื่อง'
+      },
+      {
+        id: 'ws3',
+        story: 'คุณพ่อของลิลลี่ได้รับข้อความให้ไปรับเงินพิเศษที่ธนาคารแห่งหนึ่ง จึงส่งข้อความต่อให้เพื่อน และมีการส่งต่อกันไปเรื่อย ๆ ทำให้มีคนไปรอรับเงินที่ธนาคารเป็นจำนวนมาก แต่ธนาคารแจ้งว่าไม่ได้มีโครงการนี้แต่อย่างใด',
+        options: ['การถูกหลอกลวง', 'การถูกคุกคาม', 'การติดตั้งซอฟต์แวร์ไม่พึงประสงค์โดยรู้เท่าไม่ถึงการณ์'],
+        answer: 1,
+        reason: 'เป็นการสร้างและแชร์ข้อมูลเท็จที่ก่อให้เกิดความวุ่นวายในสังคม ซึ่งจัดอยู่ในกลุ่มการถูกคุกคามด้วยเนื้อหาเท็จ'
+      },
+      {
+        id: 'ws4',
+        story: 'คุณแม่ของสายฟ้า กรอกข้อมูลลงในแบบสอบถามออนไลน์ โดยได้กรอกอีเมลและรหัสผ่านที่ใช้งานจริงลงไปด้วย หลังจากนั้นปรากฏว่าแม่ไม่สามารถเข้าใช้งานอีเมลของตนเองได้ เพราะรหัสผ่านถูกเปลี่ยนแปลง',
+        options: ['การถูกหลอกลวง', 'การถูกคุกคาม', 'การติดตั้งซอฟต์แวร์ไม่พึงประสงค์โดยรู้เท่าไม่ถึงการณ์'],
+        answer: 0,
+        reason: 'เป็นการหลอกลวง (Phishing) เพื่อขโมยข้อมูลส่วนตัวและรหัสผ่าน แล้วนำไปยึดบัญชีของผู้ใช้งาน'
+      },
+      {
+        id: 'ws5',
+        story: 'น้องกุ้งได้ติดตั้งโปรแกรมสำหรับตัดต่อวิดีโอลงบนเครื่องคอมพิวเตอร์ และได้กดยอมรับเงื่อนไขทุกข้อโดยไม่ได้อ่านอย่างถี่ถ้วน ทำให้มีโปรแกรมอื่นที่ไม่ต้องการถูกติดตั้งมาด้วย และทำให้คอมพิวเตอร์ทำงานช้าลงมาก',
+        options: ['การถูกหลอกลวง', 'การถูกคุกคาม', 'การติดตั้งซอฟต์แวร์ไม่พึงประสงค์โดยรู้เท่าไม่ถึงการณ์'],
+        answer: 2,
+        reason: 'ไม่อ่านเงื่อนไขก่อนกดติดตั้ง ทำให้โปรแกรมแฝง/ซอฟต์แวร์ไม่พึงประสงค์ถูกติดตั้งมาพร้อมกันจนเครื่องทำงานช้าลง'
+      }
+    ];
+
+    const WS_PART2 = [
+      { id: 'pw1', text: '123456789', answer: false, reason: 'ไม่เหมาะสม เพราะมีแต่ตัวเลขเรียงลำดับ ไม่มีตัวอักษรและสัญลักษณ์พิเศษ เดาได้ง่ายมาก' },
+      { id: 'pw2', text: 'abcd1234', answer: false, reason: 'ไม่เหมาะสม เพราะมีเพียงตัวพิมพ์เล็กและตัวเลขเรียงกัน ขาดตัวพิมพ์ใหญ่และสัญลักษณ์พิเศษ' },
+      { id: 'pw3', text: 'Cs0202#1', answer: true, reason: 'เหมาะสม เพราะยาว 8 ตัวอักษร มีครบทั้งตัวพิมพ์ใหญ่ พิมพ์เล็ก ตัวเลข และสัญลักษณ์พิเศษ' },
+      { id: 'pw4', text: 'asdfzxcv฿', answer: false, reason: 'ไม่เหมาะสม เพราะไม่มีตัวอักษรพิมพ์ใหญ่ ไม่มีตัวเลข และเรียงตามลำดับแป้นพิมพ์' },
+      { id: 'pw5', text: '987654321', answer: false, reason: 'ไม่เหมาะสม เพราะมีแต่ตัวเลขเรียงย้อนกลับ ไม่มีตัวอักษรและสัญลักษณ์พิเศษ เดาได้ง่าย' }
+    ];
+
+    const TF_DATA = [
+      { q: '1.1 การรู้เท่าทันภัยจากอินเทอร์เน็ตจะทำให้เราใช้งานอินเทอร์เน็ตได้อย่างปลอดภัย', answer: true, explain: 'ถูกต้อง! การรู้เท่าทันภัยแฝงช่วยให้เราป้องกันตนเองและหลีกเลี่ยงความเสี่ยงได้' },
+      { q: '1.2 ข้อมูลบนอินเทอร์เน็ตเป็นข้อมูลที่ได้รับการรับรองว่าปลอดภัย เชื่อถือได้', answer: false, explain: 'ผิด! ข้อมูลบนอินเทอร์เน็ตมีทั้งข้อมูลจริงและข่าวปลอม จึงต้องตรวจสอบความน่าเชื่อถือก่อนเสมอ' },
+      { q: '1.3 ไวรัสคอมพิวเตอร์อาจถูกติดตั้งจากการดาวน์โหลดซอฟต์แวร์ฟรีได้', answer: true, explain: 'ถูกต้อง! ซอฟต์แวร์ฟรีจากแหล่งที่ไม่น่าเชื่อถือมักมีไวรัสหรือโปรแกรมไม่พึงประสงค์แฝงมาด้วย' },
+      { q: '1.4 รหัสผ่านที่ดีควรเป็นตัวเลขหรือตัวอักษรทั้งหมด เพราะจะช่วยให้จำได้ง่าย', answer: false, explain: 'ผิด! รหัสผ่านที่ดีควรผสมทั้งพิมพ์ใหญ่ พิมพ์เล็ก ตัวเลข และสัญลักษณ์พิเศษ' },
+      { q: '1.5 การตั้งรหัสผ่านที่ดีช่วยปกป้องข้อมูลให้ปลอดภัยได้', answer: true, explain: 'ถูกต้อง! รหัสผ่านที่คาดเดายากช่วยป้องกันไม่ให้ผู้อื่นเข้าถึงข้อมูลส่วนตัวของเรา' },
+      { q: '1.6 Digital Footprint แบ่งได้ 2 แบบ', answer: true, explain: 'ถูกต้อง! แบ่งเป็น Active Digital Footprint และ Passive Digital Footprint' },
+      { q: '1.7 Active Digital Footprint เป็นการทิ้งร่องรอยบนอินเทอร์เน็ตโดยตั้งใจ', answer: true, explain: 'ถูกต้อง! เช่น การโพสต์รูป คอมเมนต์ หรือแชร์ข้อมูลด้วยตนเอง' },
+      { q: '1.8 รหัสผ่านควรเปลี่ยน ทุก ๆ 2 – 3 เดือน', answer: true, explain: 'ถูกต้อง! การเปลี่ยนรหัสผ่านเป็นประจำ (ทุก 2–3 เดือน หรือ 3–6 เดือน) ช่วยเพิ่มความปลอดภัย' },
+      { q: '1.9 การตัดต่อภาพตนเองเข้าข่ายการกระทำผิดตาม พ.ร.บ. คอมพิวเตอร์', answer: false, explain: 'ผิด! การตัดต่อภาพตนเองโดยไม่ทำให้ผู้อื่นเสียหายไม่ถือเป็นความผิดตาม พ.ร.บ.คอมพิวเตอร์' },
+      { q: '1.10 รหัสผ่านที่ดีควรมีตัวอักษรภาษาอังกฤษพิมพ์ใหญ่ พิมพ์เล็ก ตัวเลข และสัญลักษณ์พิเศษ ร่วมด้วย', answer: true, explain: 'ถูกต้อง! และควรมีความยาวไม่น้อยกว่า 8 ตัวอักษร' }
+    ];
+
+    // ==================== APP STATE ====================
+    const state = {
+      stage: 'home',
+      soundOn: true,
+      xp: 0,
+      student: { prefix: 'เด็กชาย', name: '', number: '' },
+      readCards: { scam: false, harass: false, malware: false },
+      pwLabBonusGiven: false,
+      pretest: { idx: 0, answers: Array(10).fill(null), done: false, score: 0 },
+      posttest: { idx: 0, answers: Array(10).fill(null), done: false, score: 0 },
+      worksheet: {
+        p1: Array(5).fill(null),
+        p2: Array(5).fill(null),
+        checked: false,
+        score: 0
+      },
+      truefalse: { idx: 0, answers: Array(10).fill(null), combo: 0, score: 0, done: false }
+    };
+
+    // ==================== WEB AUDIO SYNTH ====================
+    let audioCtx = null;
+    function playTone(type) {
+      if (!state.soundOn) return;
+      try {
+        if (!audioCtx) {
+          const Ctx = window.AudioContext || window.webkitAudioContext;
+          if (!Ctx) return;
+          audioCtx = new Ctx();
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'click') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(520, now);
+          gain.gain.setValueAtTime(0.06, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } else if (type === 'good') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.08);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+          osc.start(now);
+          osc.stop(now + 0.22);
+        } else if (type === 'bad') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.setValueAtTime(175, now + 0.1);
+          gain.gain.setValueAtTime(0.06, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+          osc.start(now);
+          osc.stop(now + 0.22);
+        } else if (type === 'win') {
+          [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(freq, now + i * 0.09);
+            g.gain.setValueAtTime(0.09, now + i * 0.09);
+            g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.09 + 0.25);
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.start(now + i * 0.09);
+            o.stop(now + i * 0.09 + 0.25);
+          });
+        }
+      } catch (e) { /* ignore audio errors */ }
+    }
+
+    function addXP(amount) {
+      state.xp += amount;
+      document.getElementById('xp-display').textContent = state.xp + ' XP';
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      document.getElementById('toast-msg').textContent = msg;
+      t.classList.remove('hidden');
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.classList.add('hidden'), 2600);
+    }
+
+    // ==================== NAVIGATION ====================
+    function goStage(stageName) {
+      playTone('click');
+      state.stage = stageName;
+      ['home', 'pretest', 'learn', 'worksheet', 'truefalse', 'posttest', 'summary'].forEach(s => {
+        document.getElementById('stage-' + s).classList.toggle('hidden', s !== stageName);
+      });
+      document.querySelectorAll('#stage-nav .stage-pill').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.stage === stageName);
+      });
+      if (stageName === 'pretest') renderQuiz('pretest');
+      if (stageName === 'posttest') renderQuiz('posttest');
+      if (stageName === 'worksheet') renderWorksheet();
+      if (stageName === 'truefalse') renderTrueFalse();
+      if (stageName === 'summary') renderSummary();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ==================== QUIZ RENDERER (PRE & POST) ====================
+    function renderQuiz(type) {
+      const data = type === 'pretest' ? PRETEST_DATA : POSTTEST_DATA;
+      const qState = state[type];
+      const container = document.getElementById(type + '-container');
+      const progText = document.getElementById(type + '-progress-text');
+      const progBar = document.getElementById(type + '-progress-bar');
+
+      if (qState.done) {
+        const pct = Math.round((qState.score / data.length) * 100);
+        const passed = pct >= 75;
+        progText.textContent = 'เสร็จสิ้น 10 / 10';
+        progBar.style.width = '100%';
+
+        let reviewHtml = data.map((item, idx) => {
+          const userAns = qState.answers[idx];
+          const isOk = userAns === item.answer;
+          return `
+            <div class="p-4 rounded-2xl border ${isOk ? 'border-emerald-200 bg-emerald-50/60' : 'border-rose-200 bg-rose-50/60'} text-left">
+              <div class="font-semibold text-sm text-slate-900">${item.q}</div>
+              <div class="text-xs mt-1.5 ${isOk ? 'text-emerald-700' : 'text-rose-700'} font-semibold">
+                คำตอบของคุณ: ${userAns !== null ? item.options[userAns] : '-'} ${isOk ? '✓ ถูกต้อง' : '✗ ยังไม่ถูกต้อง'}
+              </div>
+              ${!isOk ? `<div class="text-xs text-emerald-800 font-semibold mt-0.5">เฉลย: ${item.options[item.answer]}</div>` : ''}
+              <div class="text-xs text-slate-600 mt-1">เหตุผล: ${item.explain}</div>
+            </div>
+          `;
+        }).join('');
+
+        const nextBtn = type === 'pretest'
+          ? `<button type="button" data-go-stage="learn" class="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold text-sm shadow-md">ไปด่านที่ 2: ศึกษาใบความรู้ →</button>`
+          : `<button type="button" data-go-stage="summary" class="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold text-sm shadow-md">ดูสรุปผลการเรียนรู้ & เกียรติบัตร →</button>`;
+
+        container.innerHTML = `
+          <div class="text-center py-4 space-y-3">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full ${passed ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'} text-sm font-bold">
+              ${passed ? 'ผ่านเกณฑ์ (ร้อยละ 75 ขึ้นไป)' : 'บันทึกคะแนนเรียบร้อย'}
+            </div>
+            <div class="text-3xl font-bold text-slate-900">${qState.score} / 10 คะแนน <span class="text-lg text-indigo-600">(ร้อยละ ${pct})</span></div>
+            <div class="flex flex-wrap justify-center gap-3 pt-2">
+              ${nextBtn}
+              <button type="button" id="btn-retry-${type}" class="px-4 py-3 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold">ทำแบบทดสอบอีกครั้ง</button>
+            </div>
+          </div>
+          <div class="mt-6 space-y-3 max-h-[420px] overflow-y-auto pr-1">${reviewHtml}</div>
+        `;
+        document.getElementById('btn-retry-' + type).addEventListener('click', () => {
+          qState.idx = 0;
+          qState.answers = Array(10).fill(null);
+          qState.done = false;
+          qState.score = 0;
+          renderQuiz(type);
+        });
+        container.querySelectorAll('[data-go-stage]').forEach(b => {
+          b.addEventListener('click', () => goStage(b.dataset.goStage));
+        });
+        return;
+      }
+
+      const item = data[qState.idx];
+      progText.textContent = `ข้อ ${qState.idx + 1} / ${data.length}`;
+      progBar.style.width = `${((qState.idx + 1) / data.length) * 100}%`;
+
+      const optsHtml = item.options.map((opt, oIdx) => {
+        const selected = qState.answers[qState.idx] === oIdx;
+        return `
+          <button type="button" data-opt="${oIdx}"
+            class="option-btn w-full text-left p-4 rounded-2xl border-2 ${selected ? 'border-indigo-600 bg-indigo-50 text-indigo-950 font-semibold' : 'border-slate-200 bg-white text-slate-800'} text-sm sm:text-base flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full border-2 ${selected ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 text-slate-400'} flex items-center justify-center text-xs shrink-0">
+              ${selected ? '✓' : ''}
+            </span>
+            <span>${opt}</span>
+          </button>
+        `;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="space-y-4">
+          <h3 class="text-base sm:text-lg font-bold text-slate-900 leading-relaxed">${item.q}</h3>
+          <div class="space-y-2.5">${optsHtml}</div>
+          <div class="flex items-center justify-between pt-4">
+            <button type="button" id="${type}-prev" ${qState.idx === 0 ? 'disabled' : ''}
+              class="px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold text-slate-700 disabled:opacity-40">
+              ← ข้อก่อนหน้า
+            </button>
+            <button type="button" id="${type}-next"
+              class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm">
+              ${qState.idx === data.length - 1 ? 'ส่งคำตอบทั้งหมด ✓' : 'ข้อถัดไป →'}
+            </button>
+          </div>
+        </div>
+      `;
+
+      container.querySelectorAll('[data-opt]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          playTone('click');
+          qState.answers[qState.idx] = Number(btn.dataset.opt);
+          renderQuiz(type);
+        });
+      });
+
+      document.getElementById(type + '-prev').addEventListener('click', () => {
+        if (qState.idx > 0) {
+          qState.idx--;
+          renderQuiz(type);
+        }
+      });
+
+      document.getElementById(type + '-next').addEventListener('click', () => {
+        if (qState.answers[qState.idx] === null) {
+          showToast('กรุณาเลือกคำตอบก่อนไปข้อถัดไป');
+          return;
+        }
+        if (qState.idx < data.length - 1) {
+          qState.idx++;
+          renderQuiz(type);
+        } else {
+          let score = 0;
+          data.forEach((it, i) => { if (qState.answers[i] === it.answer) score++; });
+          qState.score = score;
+          qState.done = true;
+          addXP(score * 10);
+          if (score >= 8) {
+            playTone('win');
+            if (typeof confetti === 'function') confetti({ particleCount: 70, spread: 60, origin: { y: 0.7 } });
+          } else {
+            playTone('good');
+          }
+          renderQuiz(type);
+        }
+      });
+    }
+
+    // ==================== WORKSHEET 1 RENDERER ====================
+    function renderWorksheet() {
+      const p1El = document.getElementById('ws-part1');
+      const p2El = document.getElementById('ws-part2');
+
+      p1El.innerHTML = WS_PART1.map((item, idx) => {
+        const chosen = state.worksheet.p1[idx];
+        const checked = state.worksheet.checked;
+        const isCorrect = chosen === item.answer;
+        return `
+          <div class="p-4 sm:p-5 rounded-2xl border ${checked ? (isCorrect ? 'border-emerald-300 bg-emerald-50/50' : 'border-rose-300 bg-rose-50/50') : 'border-slate-200 bg-white'}">
+            <p class="text-sm font-medium text-slate-900 leading-relaxed mb-3">
+              <span class="font-bold text-violet-700">สถานการณ์ที่ ${idx + 1}:</span> ${item.story}
+            </p>
+            <div class="grid sm:grid-cols-3 gap-2">
+              ${item.options.map((opt, oIdx) => `
+                <button type="button" data-ws1="${idx}" data-val="${oIdx}"
+                  class="px-3 py-2 rounded-xl border text-xs font-semibold text-left transition ${chosen === oIdx ? 'border-violet-600 bg-violet-600 text-white' : 'border-slate-200 bg-slate-50 hover:bg-violet-50 text-slate-700'}">
+                  ${opt}
+                </button>
+              `).join('')}
+            </div>
+            ${checked ? `
+              <div class="mt-3 text-xs ${isCorrect ? 'text-emerald-800' : 'text-rose-800'} font-medium">
+                ${isCorrect ? '✓ ถูกต้อง!' : '✗ เฉลย: ' + item.options[item.answer]} — ${item.reason}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+
+      p2El.innerHTML = WS_PART2.map((item, idx) => {
+        const chosen = state.worksheet.p2[idx];
+        const checked = state.worksheet.checked;
+        const isCorrect = chosen === item.answer;
+        return `
+          <div class="p-4 rounded-2xl border ${checked ? (isCorrect ? 'border-emerald-300 bg-emerald-50/50' : 'border-rose-300 bg-rose-50/50') : 'border-slate-200 bg-white'} flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="text-sm font-bold text-slate-900">2.${idx + 1} รหัสผ่าน: <code class="px-2 py-0.5 rounded bg-slate-100 text-indigo-700 font-mono">${item.text}</code></div>
+              ${checked ? `<div class="text-xs mt-1 ${isCorrect ? 'text-emerald-800' : 'text-rose-800'}">${isCorrect ? '✓ ถูกต้อง!' : '✗ เฉลย: ' + (item.answer ? 'เหมาะสม' : 'ไม่เหมาะสม')} — ${item.reason}</div>` : ''}
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button type="button" data-ws2="${idx}" data-val="true"
+                class="px-4 py-2 rounded-xl border text-xs font-semibold transition ${chosen === true ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-200 bg-slate-50 hover:bg-emerald-50 text-slate-700'}">
+                เหมาะสม
+              </button>
+              <button type="button" data-ws2="${idx}" data-val="false"
+                class="px-4 py-2 rounded-xl border text-xs font-semibold transition ${chosen === false ? 'border-rose-600 bg-rose-600 text-white' : 'border-slate-200 bg-slate-50 hover:bg-rose-50 text-slate-700'}">
+                ไม่เหมาะสม
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      p1El.querySelectorAll('[data-ws1]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          playTone('click');
+          state.worksheet.p1[Number(btn.dataset.ws1)] = Number(btn.dataset.val);
+          state.worksheet.checked = false;
+          renderWorksheet();
+        });
+      });
+
+      p2El.querySelectorAll('[data-ws2]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          playTone('click');
+          state.worksheet.p2[Number(btn.dataset.ws2)] = btn.dataset.val === 'true';
+          state.worksheet.checked = false;
+          renderWorksheet();
+        });
+      });
+    }
+
+    // ==================== TRUE / FALSE GAME ====================
+    function renderTrueFalse() {
+      const tf = state.truefalse;
+      const container = document.getElementById('tf-container');
+      document.getElementById('tf-combo').textContent = tf.combo;
+      document.getElementById('tf-score').textContent = tf.score;
+
+      if (tf.done) {
+        document.getElementById('tf-progress-bar').style.width = '100%';
+        container.innerHTML = `
+          <div class="text-center py-6 space-y-3">
+            <div class="text-3xl font-bold text-slate-900">จบเกมตอบด่วน! ได้ ${tf.score} / 10 คะแนน</div>
+            <p class="text-sm text-slate-600">คุณได้ทบทวนความเข้าใจครบทั้ง 10 ข้อจากคำถามหลังกิจกรรมเรียบร้อยแล้ว</p>
+            <div class="flex flex-wrap justify-center gap-3 pt-2">
+              <button type="button" data-go-stage="posttest" class="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold text-sm shadow-md">
+                ไปด่านที่ 5: แบบทดสอบหลังเรียน →
+              </button>
+              <button type="button" id="btn-tf-retry" class="px-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-700 text-sm font-semibold">
+                เล่นอีกครั้ง
+              </button>
+            </div>
+          </div>
+        `;
+        document.getElementById('btn-tf-retry').addEventListener('click', () => {
+          state.truefalse = { idx: 0, answers: Array(10).fill(null), combo: 0, score: 0, done: false };
+          renderTrueFalse();
+        });
+        container.querySelector('[data-go-stage]').addEventListener('click', (e) => goStage(e.currentTarget.dataset.goStage));
+        return;
+      }
+
+      const item = TF_DATA[tf.idx];
+      const answered = tf.answers[tf.idx] !== null;
+      document.getElementById('tf-progress-bar').style.width = `${((tf.idx + 1) / TF_DATA.length) * 100}%`;
+
+      container.innerHTML = `
+        <div class="p-6 rounded-2xl bg-gradient-to-br from-slate-50 to-amber-50/40 border border-slate-200 text-center space-y-5">
+          <div class="text-xs font-bold text-amber-700">ข้อที่ ${tf.idx + 1} จาก ${TF_DATA.length}</div>
+          <h3 class="text-lg sm:text-xl font-bold text-slate-900 max-w-2xl mx-auto leading-relaxed">${item.q}</h3>
+
+          <div class="flex justify-center gap-4 max-w-md mx-auto">
+            <button type="button" id="tf-btn-true" ${answered ? 'disabled' : ''}
+              class="flex-1 py-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-base transition disabled:opacity-60">
+              ✓ ถูก
+            </button>
+            <button type="button" id="tf-btn-false" ${answered ? 'disabled' : ''}
+              class="flex-1 py-4 rounded-2xl border-2 border-rose-500 bg-rose-50 hover:bg-rose-100 text-rose-800 font-bold text-base transition disabled:opacity-60">
+              ✗ ผิด
+            </button>
+          </div>
+
+          ${answered ? `
+            <div class="p-4 rounded-xl ${tf.answers[tf.idx] === item.answer ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-900'} text-sm font-medium max-w-xl mx-auto">
+              ${tf.answers[tf.idx] === item.answer ? '✓ เก่งมาก!' : '✗ ยังไม่ตรง!'} ${item.explain}
+            </div>
+            <button type="button" id="tf-next-btn" class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm shadow-sm">
+              ${tf.idx === TF_DATA.length - 1 ? 'ดูผลคะแนนเกม →' : 'ข้อถัดไป →'}
+            </button>
+          ` : ''}
+        </div>
+      `;
+
+      const handleTF = (val) => {
+        tf.answers[tf.idx] = val;
+        if (val === item.answer) {
+          tf.score++;
+          tf.combo++;
+          addXP(10);
+          playTone('good');
+        } else {
+          tf.combo = 0;
+          playTone('bad');
+        }
+        renderTrueFalse();
+      };
+
+      document.getElementById('tf-btn-true').addEventListener('click', () => handleTF(true));
+      document.getElementById('tf-btn-false').addEventListener('click', () => handleTF(false));
+      const nextBtn = document.getElementById('tf-next-btn');
+      if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+          if (tf.idx < TF_DATA.length - 1) {
+            tf.idx++;
+          } else {
+            tf.done = true;
+            if (tf.score >= 8) playTone('win');
+          }
+          renderTrueFalse();
+        });
+      }
+    }
+
+    // ==================== SUMMARY RENDERER ====================
+    function getQuality(score) {
+      if (score >= 8) return 'ดี (ผ่านเกณฑ์)';
+      if (score >= 5) return 'พอใช้';
+      return 'ปรับปรุง';
+    }
+
+    function renderSummary() {
+      const fullName = state.student.name
+        ? `${state.student.prefix}${state.student.name}`
+        : 'ผู้เรียนทั่วไป';
+      document.getElementById('sum-student-name').textContent = fullName;
+      document.getElementById('sum-student-no').textContent = state.student.number || '-';
+
+      const pre = state.pretest.done ? state.pretest.score : null;
+      const ws = state.worksheet.checked ? state.worksheet.score : null;
+      const tf = state.truefalse.done ? state.truefalse.score : null;
+      const post = state.posttest.done ? state.posttest.score : null;
+
+      document.getElementById('sum-pre').textContent = pre !== null ? `${pre} / 10` : 'ยังไม่ทำ';
+      document.getElementById('sum-pre-pct').textContent = pre !== null ? `ร้อยละ ${pre * 10}` : '-';
+
+      document.getElementById('sum-ws').textContent = ws !== null ? `${ws} / 10` : 'ยังไม่ตรวจ';
+      document.getElementById('sum-ws-quality').textContent = ws !== null ? `ระดับ: ${getQuality(ws)}` : '-';
+
+      document.getElementById('sum-tf').textContent = tf !== null ? `${tf} / 10` : 'ยังไม่ทำ';
+      document.getElementById('sum-tf-quality').textContent = tf !== null ? `ระดับ: ${getQuality(tf)}` : '-';
+
+      document.getElementById('sum-post').textContent = post !== null ? `${post} / 10` : 'ยังไม่ทำ';
+      document.getElementById('sum-post-quality').textContent = post !== null ? `ระดับ: ${getQuality(post)}` : '-';
+
+      const badge = document.getElementById('sum-pass-badge');
+      const growthText = document.getElementById('sum-growth-text');
+
+      if (post !== null) {
+        const passed = post >= 8;
+        badge.className = `inline-block px-4 py-1.5 rounded-full text-sm font-bold mb-2 ${passed ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`;
+        badge.textContent = passed ? '🎉 ผ่านเกณฑ์การประเมิน (ร้อยละ 75 ขึ้นไป)' : '💪 ยังไม่ผ่านเกณฑ์ (ควรทบทวนและลองทำหลังเรียนอีกครั้ง)';
+        if (pre !== null) {
+          const diff = post - pre;
+          growthText.textContent = diff >= 0
+            ? `พัฒนาการคะแนนหลังเรียนเพิ่มขึ้น +${diff} คะแนน (จาก ${pre} เป็น ${post} คะแนน)`
+            : `คะแนนหลังเรียน ${post} คะแนน (ก่อนเรียน ${pre} คะแนน) ลองทบทวนใบความรู้เพิ่มเติมนะ!`;
+        } else {
+          growthText.textContent = `คะแนนแบบทดสอบหลังเรียนของคุณคือ ${post} / 10 คะแนน (ร้อยละ ${post * 10})`;
+        }
+      } else {
+        badge.className = 'inline-block px-4 py-1.5 rounded-full text-sm font-bold mb-2 bg-slate-200 text-slate-700';
+        badge.textContent = 'ยังทำภารกิจไม่ครบทุกด่าน';
+        growthText.textContent = 'ทำแบบทดสอบหลังเรียน (ด่านที่ 5) เพื่อสรุปผลการประเมินและรับรองการผ่านเกณฑ์';
+      }
+    }
+
+    // ==================== INITIALIZATION & EVENTS ====================
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) lucide.createIcons();
+
+      // Stage nav buttons
+      document.querySelectorAll('#stage-nav .stage-pill, [data-go-stage]').forEach(btn => {
+        btn.addEventListener('click', () => goStage(btn.dataset.goStage || btn.dataset.stage));
+      });
+
+      // Sound toggle
+      document.getElementById('btn-sound-toggle').addEventListener('click', () => {
+        state.soundOn = !state.soundOn;
+        const icon = document.getElementById('sound-icon');
+        icon.setAttribute('data-lucide', state.soundOn ? 'volume-2' : 'volume-x');
+        if (window.lucide) lucide.createIcons();
+        showToast(state.soundOn ? 'เปิดเสียงเอฟเฟกต์แล้ว' : 'ปิดเสียงเอฟเฟกต์แล้ว');
+      });
+
+      // Manual modal
+      const modal = document.getElementById('manual-modal');
+      const openManual = () => { playTone('click'); modal.classList.remove('hidden'); };
+      const closeManual = () => { playTone('click'); modal.classList.add('hidden'); };
+      document.getElementById('btn-open-manual').addEventListener('click', openManual);
+      document.getElementById('btn-manual-inline').addEventListener('click', openManual);
+      document.getElementById('btn-close-manual').addEventListener('click', closeManual);
+      document.getElementById('btn-close-manual-2').addEventListener('click', closeManual);
+      modal.addEventListener('click', (e) => { if (e.target === modal) closeManual(); });
+
+      // Student form
+      document.getElementById('student-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        state.student.prefix = document.getElementById('input-prefix').value;
+        state.student.name = document.getElementById('input-fullname').value.trim();
+        state.student.number = document.getElementById('input-number').value.trim();
+        const badgeText = state.student.name ? `${state.student.prefix}${state.student.name}` : 'ผู้เรียนทั่วไป';
+        document.getElementById('header-student-name').textContent = badgeText;
+        goStage('pretest');
+      });
+      document.getElementById('btn-quick-explore').addEventListener('click', () => goStage('learn'));
+
+      // Threat cards XP
+      document.querySelectorAll('.threat-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const key = card.dataset.card;
+          if (!state.readCards[key]) {
+            state.readCards[key] = true;
+            addXP(10);
+            playTone('good');
+            const badge = card.querySelector('.card-status');
+            badge.textContent = '✓ อ่านแล้ว (+10 XP)';
+            badge.classList.add('bg-emerald-100', 'text-emerald-800', 'border-emerald-300');
+          } else {
+            playTone('click');
+          }
+        });
+      });
+
+      // Password Lab
+      const pwInput = document.getElementById('pw-lab-input');
+      const updatePwLab = () => {
+        const val = pwInput.value;
+        const checks = {
+          len: val.length >= 8,
+          upper: /[A-Z]/.test(val),
+          lower: /[a-z]/.test(val),
+          num: /[0-9]/.test(val),
+          sym: /[^A-Za-z0-9\s]/.test(val)
+        };
+        let score = 0;
+        Object.keys(checks).forEach(k => {
+          const el = document.getElementById('chk-' + k);
+          if (checks[k]) {
+            score++;
+            el.className = 'flex items-center gap-2 text-emerald-700 font-semibold';
+          } else {
+            el.className = 'flex items-center gap-2 text-slate-500';
+          }
+        });
+        const bar = document.getElementById('pw-lab-bar');
+        const label = document.getElementById('pw-lab-label');
+        document.getElementById('pw-lab-score').textContent = `${score} / 5 เกณฑ์`;
+        bar.style.width = `${(score / 5) * 100}%`;
+        if (!val) {
+          bar.className = 'h-full bg-slate-300 transition-all duration-300';
+          label.textContent = 'ยังไม่ได้กรอกรหัสผ่าน';
+        } else if (score <= 2) {
+          bar.className = 'h-full bg-rose-500 transition-all duration-300';
+          label.textContent = 'ความปลอดภัยต่ำ (เดาง่าย)';
+        } else if (score <= 4) {
+          bar.className = 'h-full bg-amber-500 transition-all duration-300';
+          label.textContent = 'ความปลอดภัยปานกลาง (เพิ่มเงื่อนไขอีกนิด)';
+        } else {
+          bar.className = 'h-full bg-emerald-500 transition-all duration-300';
+          label.textContent = 'ความปลอดภัยสูงมาก! เยี่ยมเลย';
+          if (!state.pwLabBonusGiven) {
+            state.pwLabBonusGiven = true;
+            addXP(20);
+            playTone('good');
+            showToast('เก่งมาก! ตั้งรหัสผ่านปลอดภัยครบ 5 เกณฑ์ (+20 XP)');
+          }
+        }
+      };
+      pwInput.addEventListener('input', updatePwLab);
+      document.getElementById('pw-lab-sample').addEventListener('click', () => {
+        const samples = ['Cs0202#1', 'Mtf6wU_1969', 'Cyber@P6!2026'];
+        pwInput.value = samples[Math.floor(Math.random() * samples.length)];
+        updatePwLab();
+      });
+
+      // Worksheet check all
+      document.getElementById('btn-ws-check-all').addEventListener('click', () => {
+        if (state.worksheet.p1.includes(null) || state.worksheet.p2.includes(null)) {
+          showToast('กรุณาตอบคำถามในใบงานให้ครบทั้ง 10 ข้อก่อนตรวจ');
+          return;
+        }
+        let s = 0;
+        WS_PART1.forEach((it, i) => { if (state.worksheet.p1[i] === it.answer) s++; });
+        WS_PART2.forEach((it, i) => { if (state.worksheet.p2[i] === it.answer) s++; });
+        state.worksheet.score = s;
+        if (!state.worksheet.checked) addXP(s * 10);
+        state.worksheet.checked = true;
+        document.getElementById('ws-score-badge').textContent = `${s} / 10`;
+        if (s >= 8) {
+          playTone('win');
+          if (typeof confetti === 'function') confetti({ particleCount: 60, spread: 55, origin: { y: 0.7 } });
+        } else {
+          playTone('good');
+        }
+        renderWorksheet();
+      });
+
+      // Print & Reset
+      document.getElementById('btn-print-report').addEventListener('click', () => window.print());
+      document.getElementById('btn-reset-all').addEventListener('click', () => {
+        state.xp = 0;
+        document.getElementById('xp-display').textContent = '0 XP';
+        state.readCards = { scam: false, harass: false, malware: false };
+        state.pwLabBonusGiven = false;
+        state.pretest = { idx: 0, answers: Array(10).fill(null), done: false, score: 0 };
+        state.posttest = { idx: 0, answers: Array(10).fill(null), done: false, score: 0 };
+        state.worksheet = { p1: Array(5).fill(null), p2: Array(5).fill(null), checked: false, score: 0 };
+        state.truefalse = { idx: 0, answers: Array(10).fill(null), combo: 0, score: 0, done: false };
+        document.getElementById('ws-score-badge').textContent = '0 / 10';
+        goStage('home');
+        showToast('รีเซ็ตข้อมูลเรียบร้อยแล้ว');
+      });
+    });
+  </script>
+</body>
+</html>
